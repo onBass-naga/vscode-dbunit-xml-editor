@@ -10,10 +10,16 @@
 	"activationEvents": [],
 	"main": "./out/extension.js",
 	"contributes": {
-		"commands": [
+		"customEditors": [
 			{
-				"command": "extension.helloXml",
-				"title": "Hello XML"
+				"viewType": "editor",
+				"displayName": "DBUnit XML Editor",
+				"selector": [
+					{
+						"filenamePattern": "*.xml"
+					}
+				],
+				"priority": "option"
 			}
 		]
 	},
