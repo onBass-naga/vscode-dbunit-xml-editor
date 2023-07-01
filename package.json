@@ -8,7 +8,7 @@
 		"vscode": "^1.74.0"
 	},
 	"activationEvents": [],
-	"main": "./extension.js",
+	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
@@ -17,8 +17,18 @@
 			}
 		]
 	},
-	"scripts": {},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint \"src/**/*.ts\"",
+		"watch": "tsc -watch -p ./"
+	},
 	"devDependencies": {
-		"@types/vscode": "^1.73.0"
+		"@types/node": "^16.18.34",
+		"@types/vscode": "^1.73.0",
+		"@typescript-eslint/eslint-plugin": "^5.42.0",
+		"@typescript-eslint/parser": "^5.42.0",
+		"eslint": "^8.26.0",
+		"typescript": "^5.1.3"
 	}
 }
