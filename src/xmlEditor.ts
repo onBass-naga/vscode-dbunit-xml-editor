@@ -15,58 +15,60 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
     ) { }
 
 
-    public async resolveCustomTextEditor(document: vscode.TextDocument, 
-        webviewPanel: vscode.WebviewPanel, 
+    public async resolveCustomTextEditor(document: vscode.TextDocument,
+        webviewPanel: vscode.WebviewPanel,
         token: vscode.CancellationToken): Promise<void> {
 
         webviewPanel.webview.options = {
-			enableScripts: true,
-		};
-		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
+            enableScripts: true,
+        };
+        webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
         function updateWebview() {
-			webviewPanel.webview.postMessage({
-				type: 'update',
-				text: document.getText(),
-			});
-		}
+            webviewPanel.webview.postMessage({
+                type: 'update',
+                text: document.getText(),
+            });
+        }
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
-			if (e.document.uri.toString() === document.uri.toString()) {
-				updateWebview();
-			}
-		});
+            if (e.document.uri.toString() === document.uri.toString()) {
+                updateWebview();
+            }
+        });
 
-		webviewPanel.onDidDispose(() => {
-			changeDocumentSubscription.dispose();
-		});
+        webviewPanel.onDidDispose(() => {
+            changeDocumentSubscription.dispose();
+        });
 
-		webviewPanel.webview.onDidReceiveMessage(e => {
-			switch (e.type) {
-				case 'apply':
-					this.save(document, e.text);
-					return;
-			}
-		});
+        webviewPanel.webview.onDidReceiveMessage(e => {
+            switch (e.type) {
+                case 'apply':
+                    this.save(document, e.text);
+                    return;
+            }
+        });
 
-		updateWebview();
+        updateWebview();
     }
 
     private save(document: vscode.TextDocument, textModified: string) {
-        
+
         const edit = new vscode.WorkspaceEdit();
 
-		edit.replace(
-			document.uri,
-			new vscode.Range(0, 0, document.lineCount, 0),
-			textModified);
+        edit.replace(
+            document.uri,
+            new vscode.Range(0, 0, document.lineCount, 0),
+            textModified);
 
-		return vscode.workspace.applyEdit(edit);
+        return vscode.workspace.applyEdit(edit);
     }
 
     private getHtmlForWebview(webview: vscode.Webview): string {
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-			this.context.extensionUri, 'media', 'datasetTables.js'));
+        const mainScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'datasetTables.js'));
+        const converterScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'converter.js'));
         const nonce = this.getNonce();
 
         return /* html */`
@@ -83,7 +85,8 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
 			<body>
                 <div id="dataset-tables"></div>
 
-                <script nonce="${nonce}" src="${scriptUri}"></script>
+                <script nonce="${nonce}" src="${converterScriptUri}"></script>
+                <script nonce="${nonce}" src="${mainScriptUri}"></script>
 			</body>
 			</html>`;
     }

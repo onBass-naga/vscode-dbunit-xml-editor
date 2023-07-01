@@ -8,32 +8,40 @@
     textbox.setAttribute("cols", "100");
     textbox.setAttribute("rows", "40");
     textbox.addEventListener('blur', () => {
+        console.log(!!hidden.value)
         vscode.postMessage({
 			type: 'apply',
-            text: textbox.value
+            text: serialize(JSON.parse(textbox.value), hidden.value)
 		});
 	});
     container.appendChild(textbox);
 
-    function updateContent(text) {
+    const hidden = document.createElement("hidden");
+    hidden.value = false;
+    container.appendChild(hidden);
+
+    function updateContent(text, isFlatXml) {
 		textbox.value = "";
         textbox.value = text;
+        hidden.value = isFlatXml;
 	}
 
     window.addEventListener('message', event => {
 		const message = event.data;
 		switch (message.type) {
 			case 'update':
-				const text = message.text;
-				updateContent(text);
-				vscode.setState({ text });
+                const xmlObj = parseXmlString(message.text);
+				const text = JSON.stringify(xmlObj.tables);
+				updateContent(text, xmlObj.isFlatXml);
+				vscode.setState({ xmlObj });
 				return;
 		}
 	});
 
 	const state = vscode.getState();
 	if (state) {
-		updateContent(state.text);
+        const text = JSON.stringify(state.xmlObj.tables);
+		updateContent(text, state.xmlObj.isFlatXml);
 	}
 
 }());
