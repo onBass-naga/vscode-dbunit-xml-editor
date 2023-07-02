@@ -1,0 +1,33 @@
+
+.tab-list {
+  list-style-type: none;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-btween;
+}
+
+.tab-list-item {
+  text-align: center;
+  flex: 0 0 33.33333%;
+  background-color: #eee;
+  padding: 10px 0;
+  color: #777;
+  font-weight: 700;
+}
+
+.tab-list-item.active {
+  background-color: #99eee0;
+  color: #333;
+}
+ 
+.tab-contents-item {
+  display: none;
+}
+
+.tab-contents-item.show {
+  display: block;
+}
+
+.tabulator-menu-item {
+  color: #555;
+}

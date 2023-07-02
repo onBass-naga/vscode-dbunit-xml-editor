@@ -25,6 +25,7 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
         webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
         function updateWebview() {
+            console.log(document.getText())
             webviewPanel.webview.postMessage({
                 type: 'update',
                 text: document.getText(),
@@ -69,6 +70,14 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
             this.context.extensionUri, 'media', 'datasetTables.js'));
         const converterScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
             this.context.extensionUri, 'media', 'converter.js'));
+        const styleSheetUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'style.css'));
+
+        const tabulatorScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'third-party', 'tabulator', 'tabulator.min.js'));
+        const tabulatorCssUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'third-party', 'tabulator',  'tabulator.min.css'));
+
         const nonce = this.getNonce();
 
         return /* html */`
@@ -79,12 +88,15 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <link href="${tabulatorCssUri}" rel="stylesheet">
+                <link href="${styleSheetUri}" rel="stylesheet">
 
 				<title>XML Editor</title>
 			</head>
 			<body>
                 <div id="dataset-tables"></div>
 
+                <script nonce="${nonce}" src="${tabulatorScriptUri}"></script>
                 <script nonce="${nonce}" src="${converterScriptUri}"></script>
                 <script nonce="${nonce}" src="${mainScriptUri}"></script>
 			</body>
