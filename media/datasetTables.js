@@ -1,8 +1,179 @@
 ;(function () {
   let tablesState = null
-  const vscode = acquireVsCodeApi()
+  let activeTabIndex = 0
 
-  const container = document.querySelector('#dataset-tables')
+  const vscode = acquireVsCodeApi()
+  const tableEditDialog = document.getElementById('tableEditDialog')
+  const tableNameField = tableEditDialog.querySelector('#tableNameField')
+  const columnListArea = tableEditDialog.querySelector('#columnListArea')
+  const addColumnBtn = tableEditDialog.querySelector('#addColumnBtn')
+  addColumnBtn.addEventListener('click', (event) => {
+    event.preventDefault()
+    const columnRowElem = createColumnRowElem('')
+    columnListArea.appendChild(columnRowElem)
+  })
+  function createColumnRowElem(columnName, hideDeleteBtn) {
+    const columnRowElem = document.createElement('div')
+    const inputElem = document.createElement('input')
+    inputElem.className = 'columnNameField'
+    inputElem.setAttribute('type', 'text')
+    inputElem.value = columnName
+    columnRowElem.appendChild(inputElem)
+    if (!hideDeleteBtn) {
+      const delBtnElem = document.createElement('button')
+      delBtnElem.className = 'deleteColumnBtn'
+      delBtnElem.innerText = ' - '
+      delBtnElem.addEventListener('click', (event) => {
+        event.preventDefault()
+        columnListArea.removeChild(event.target.parentNode)
+      })
+      columnRowElem.appendChild(delBtnElem)
+    }
+    return columnRowElem
+  }
+  const deleteColumnBtns = tableEditDialog.querySelectorAll('.deleteColumnBtn')
+  deleteColumnBtns.forEach((deleteColumnBtn) => {
+    deleteColumnBtn.addEventListener('click', (event) => {
+      event.preventDefault()
+      columnListArea.removeChild(event.target.parentNode)
+    })
+  })
+  const confirmBtn = tableEditDialog.querySelector('#confirmBtn')
+  confirmBtn.addEventListener('click', (event) => {
+    event.preventDefault()
+    tableEditDialog.close(
+      JSON.stringify({
+        tableName: tableNameField.value.trim(),
+        editMode: confirmBtn.value,
+      })
+    )
+  })
+
+  tableEditDialog.addEventListener('close', (e) => {
+    const result = tableEditDialog.returnValue
+    if (result == '') {
+      clearModalField()
+      return
+    }
+
+    const { tableName, editMode } = JSON.parse(result)
+    const { tables, isFlatXml } = vscode.getState()
+
+    const columnNameFields =
+      tableEditDialog.querySelectorAll('.columnNameField')
+    const columnNames = [...columnNameFields].map((it) => it.value)
+    const data = [
+      columnNames.reduce((acc, name) => {
+        acc[name] = ''
+        return acc
+      }, {}),
+    ]
+
+    if (editMode === 'create') {
+      tables.push({
+        tableName,
+        columnNames,
+        data,
+      })
+      activeTabIndex = tables.length - 1
+
+      vscode.postMessage({
+        type: 'apply',
+        text: serialize(tables, isFlatXml),
+      })
+    } else if (editMode === 'update') {
+      const tableModified = (() => {
+        const original = structuredClone(tables[activeTabIndex])
+        const { added, keep } = columnNames.reduce(
+          (acc, name) => {
+            if (original.columnNames.includes(name)) {
+              acc.keep.push(name)
+            } else {
+              acc.added.push(name)
+            }
+            return acc
+          },
+          { added: [], keep: [] }
+        )
+
+        const data = original.data.map((row) => {
+          return columnNames.reduce((acc, name) => {
+            if (added.includes(name)) {
+              acc[name] = ''
+            } else if (keep.includes(name)) {
+              acc[name] = row[name] || ''
+            }
+            return acc
+          }, {})
+        })
+
+        return Object.assign({}, original, { columnNames, data })
+      })()
+
+      tables.splice(activeTabIndex, 1, tableModified)
+
+      vscode.postMessage({
+        type: 'apply',
+        text: serialize(tables, isFlatXml),
+      })
+    } else if (editMode === 'rename') {
+      const tableModified = (() => {
+        const original = structuredClone(tables[activeTabIndex])
+        const mapping = original.columnNames.reduce((acc, org, i) => {
+          acc[org] = columnNames[i]
+          return acc
+        }, {})
+        console.log(mapping)
+
+        const data = original.data.map((row) => {
+          return original.columnNames.reduce((acc, org) => {
+            const value = row[org] || ''
+            acc[mapping[org]] = value
+            return acc
+          }, {})
+        })
+
+        return Object.assign({}, original, { columnNames, data })
+      })()
+
+      tables.splice(activeTabIndex, 1, tableModified)
+
+      vscode.postMessage({
+        type: 'apply',
+        text: serialize(tables, isFlatXml),
+      })
+    } else if (editMode === 'move') {
+    }
+
+    clearModalField(columnNameFields)
+  })
+
+  function clearModalField() {
+    tableEditDialog
+      .querySelectorAll('input')
+      .forEach((elemm) => (elemm.value = ''))
+
+    addColumnBtn.style.visibility = 'visible'
+    tableEditDialog.querySelector('#tableNameField').readOnly = false
+  }
+
+  const container = document.querySelector('#container')
+
+  const showTableModalBtn = document.createElement('button')
+  showTableModalBtn.innerText = 'Add table'
+  showTableModalBtn.addEventListener('click', () => {
+    confirmBtn.value = 'create'
+    confirmBtn.innerText = 'Create'
+    tableEditDialog.querySelectorAll('.columnNameField').forEach((it) => {
+      columnListArea.removeChild(it.parentNode)
+    })
+    const columnRowElem = createColumnRowElem('')
+    columnListArea.appendChild(columnRowElem)
+
+    tableEditDialog.showModal()
+  })
+
+  container.appendChild(showTableModalBtn)
 
   const tab = document.createElement('ul')
   tab.className = 'tab-list'
@@ -22,7 +193,7 @@
     }
     for (let i = 0; i < tables.length; i++) {
       const li = document.createElement('li')
-      const activeClass = i == 0 ? 'active' : ''
+      const activeClass = i == activeTabIndex ? 'active' : ''
       li.className = `tab-list-item ${activeClass}`
       li.innerText = tables[i].tableName
       tab.appendChild(li)
@@ -33,15 +204,8 @@
     }
     for (let i = 0; i < tables.length; i++) {
       const content = document.createElement('div')
-      const showClass = i == 0 ? 'show' : ''
+      const showClass = i == activeTabIndex ? 'show' : ''
       content.className = `tab-contents-item ${showClass}`
-
-      const showColumnModalButton = document.createElement('button')
-      showColumnModalButton.innerText = 'Edit columns...'
-      showColumnModalButton.addEventListener('click', () => {
-        // TODO: カラム編集モーダルを開く
-      })
-      content.appendChild(showColumnModalButton)
 
       const tableElem = document.createElement('table')
       tableElem.id = `editable-table_${tables[i].tableName}`
@@ -66,6 +230,81 @@
                 text: serialize(tables, hidden.value),
               })
             },
+            headerContextMenu: [
+              {
+                label: 'Add/Delete columns',
+                action: function (e, column) {
+                  tableNameField.value = tables[i].tableName
+                  confirmBtn.value = 'update'
+                  confirmBtn.innerText = 'Update'
+
+                  tableEditDialog
+                    .querySelectorAll('.columnNameField')
+                    .forEach((it) => {
+                      columnListArea.removeChild(it.parentNode)
+                    })
+
+                  tables[i].columnNames.forEach((name) => {
+                    const columnRowElem = createColumnRowElem(name)
+                    columnListArea.appendChild(columnRowElem)
+                  })
+
+                  tableEditDialog.querySelector(
+                    '#tableNameField'
+                  ).readOnly = true
+
+                  tableEditDialog
+                    .querySelectorAll('.columnNameField')
+                    .forEach((it) => (it.readOnly = true))
+
+                  tableEditDialog.showModal()
+                },
+              },
+              {
+                label: 'Rename columns',
+                action: function (e, column) {
+                  tableNameField.value = tables[i].tableName
+                  confirmBtn.value = 'rename'
+                  confirmBtn.innerText = 'Update'
+
+                  tableEditDialog
+                    .querySelectorAll('.columnNameField')
+                    .forEach((it) => {
+                      columnListArea.removeChild(it.parentNode)
+                    })
+
+                  tables[i].columnNames.forEach((name) => {
+                    const columnRowElem = createColumnRowElem(name, true)
+                    columnListArea.appendChild(columnRowElem)
+                  })
+
+                  addColumnBtn.style.visibility = 'hidden'
+
+                  tableEditDialog.showModal()
+                },
+              },
+              //   {
+              //     label: 'Move columns',
+              //     action: function (e, column) {
+              //       tableNameField.value = tables[i].tableName
+              //       confirmBtn.value = 'move'
+              //       confirmBtn.innerText = 'Update'
+
+              //       tableEditDialog
+              //         .querySelectorAll('.columnNameField')
+              //         .forEach((it) => {
+              //           columnListArea.removeChild(it.parentNode)
+              //         })
+
+              //       tables[i].columnNames.forEach((name) => {
+              //         const columnRowElem = createColumnRowElem(name, true)
+              //         columnListArea.appendChild(columnRowElem)
+              //       })
+
+              //       tableEditDialog.showModal()
+              //     },
+              //   },
+            ],
           }
         }),
       })
@@ -89,9 +328,6 @@
                 type: 'apply',
                 text: serialize(tables, hidden.value),
               })
-
-              //   // テーブルの見た目とデータを一致させるために必要
-              //   $table.addRow(rowCreated, false, index)
             },
           },
           {
@@ -111,9 +347,6 @@
                 type: 'apply',
                 text: serialize(tables, hidden.value),
               })
-
-              // テーブルの見た目とデータを一致させるために必要
-              //   $table.addRow(rowCreated, false, index + 1)
             },
           },
           {
@@ -130,9 +363,6 @@
                 type: 'apply',
                 text: serialize(tables, hidden.value),
               })
-
-              // テーブルの見た目とデータを一致させるために必要
-              //   $table.addRow(clone, false, index + 1)
             },
           },
           {
@@ -150,8 +380,6 @@
                 type: 'apply',
                 text: serialize(tables, hidden.value),
               })
-              // テーブルの見た目とデータを一致させるために必要
-              //   row.delete()
             },
           },
         ]
@@ -172,15 +400,13 @@
       const aryTabs = Array.prototype.slice.call(tabList)
       const index = aryTabs.indexOf(event.currentTarget)
       tabContent[index].classList.add('show')
+      activeTabIndex = index
     }
 
     hidden.value = isFlatXml
   }
 
   function areSame(tables1, tables2) {
-    console.log(tables1)
-    console.log(tables2)
-
     if (tables1 == null || tables2 == null) {
       return false
     }
@@ -207,9 +433,9 @@
       for (let j = 0; j < table1.data.length; j++) {
         const row1 = table1.data[j]
         const row2 = table2.data[j]
-        const columnNaames = table1.columnNames
+        const columnNames = table1.columnNames
 
-        for (let name of columnNaames) {
+        for (let name of columnNames) {
           if (row1[name] !== row2[name]) {
             return false
           }
@@ -231,10 +457,7 @@
           return
         }
 
-        // 編集内容が伝播しないようにdeepCloneを作成
-        vscode.setState({ xmlObj: structuredClone(xmlObj) })
-
-        console.log('update')
+        vscode.setState(xmlObj)
         updateContent(structuredClone(xmlObj.tables), xmlObj.isFlatXml)
 
         return
@@ -243,6 +466,6 @@
 
   const state = vscode.getState()
   if (state) {
-    updateContent(state.xmlObj.tables, state.xmlObj.isFlatXml)
+    updateContent(structuredClone(state.tables), state.isFlatXml)
   }
 })()

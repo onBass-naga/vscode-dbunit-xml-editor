@@ -76,7 +76,7 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
         const tabulatorScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
             this.context.extensionUri, 'media', 'third-party', 'tabulator', 'tabulator.min.js'));
         const tabulatorCssUri = webview.asWebviewUri(vscode.Uri.joinPath(
-            this.context.extensionUri, 'media', 'third-party', 'tabulator',  'tabulator.min.css'));
+            this.context.extensionUri, 'media', 'third-party', 'tabulator', 'tabulator.min.css'));
 
         const nonce = this.getNonce();
 
@@ -94,7 +94,27 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
 				<title>XML Editor</title>
 			</head>
 			<body>
-                <div id="dataset-tables"></div>
+                <div id="container"></div>
+                <dialog id="tableEditDialog">
+                    <form>
+                        <div>
+                            <div>Table name:</div>
+                            <div><input id="tableNameField" type="text" /></div>
+                        </div>
+                        <div>
+                            <div>Column names:</div>
+                            <div id="columnListArea">
+                                <div><input class="columnNameField" type="text" /><button class="deleteColumnBtn"> - </button></div>
+                                <div><input class="columnNameField" type="text" /><button class="deleteColumnBtn"> - </button></div>
+                            </div>
+                            <div><button id="addColumnBtn"> + </button></div>
+                        </div>
+                        <div>
+                            <button value="" formmethod="dialog">Cancel</button>
+                            <button id="confirmBtn" value="create">Create</button>
+                        </div>
+                    </form>
+                </dialog>
 
                 <script nonce="${nonce}" src="${tabulatorScriptUri}"></script>
                 <script nonce="${nonce}" src="${converterScriptUri}"></script>
