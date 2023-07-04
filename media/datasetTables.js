@@ -6,6 +6,7 @@
   const tableEditDialog = document.getElementById('tableEditDialog')
   const tableNameField = tableEditDialog.querySelector('#tableNameField')
   const columnListArea = tableEditDialog.querySelector('#columnListArea')
+  const columnMovableArea = tableEditDialog.querySelector('#columnMovableArea')
   const addColumnBtn = tableEditDialog.querySelector('#addColumnBtn')
   addColumnBtn.addEventListener('click', (event) => {
     event.preventDefault()
@@ -123,7 +124,6 @@
           acc[org] = columnNames[i]
           return acc
         }, {})
-        console.log(mapping)
 
         const data = original.data.map((row) => {
           return original.columnNames.reduce((acc, org) => {
@@ -143,6 +143,31 @@
         text: serialize(tables, isFlatXml),
       })
     } else if (editMode === 'move') {
+      const columnsReplaced = [
+        ...columnMovableArea.querySelectorAll('.movableColumnName'),
+      ].map((it) => it.dataset.name)
+
+      const tableModified = (() => {
+        const original = tables[activeTabIndex]
+        const data = original.data.map((row) => {
+          return columnsReplaced.reduce((acc, name) => {
+            acc[name] = row[name] || ''
+            return acc
+          }, {})
+        })
+
+        return Object.assign({}, original, {
+          columnNames: columnsReplaced,
+          data,
+        })
+      })()
+
+      tables.splice(activeTabIndex, 1, tableModified)
+
+      vscode.postMessage({
+        type: 'apply',
+        text: serialize(tables, isFlatXml),
+      })
     }
 
     clearModalField(columnNameFields)
@@ -153,9 +178,14 @@
       .querySelectorAll('input')
       .forEach((elemm) => (elemm.value = ''))
 
+    columnListArea.style.display = 'block'
     addColumnBtn.style.visibility = 'visible'
     tableEditDialog.querySelector('#tableNameField').readOnly = false
   }
+
+  Sortable.create(columnMovableArea, {
+    animation: 150,
+  })
 
   const container = document.querySelector('#container')
 
@@ -232,36 +262,7 @@
             },
             headerContextMenu: [
               {
-                label: 'Add/Delete columns',
-                action: function (e, column) {
-                  tableNameField.value = tables[i].tableName
-                  confirmBtn.value = 'update'
-                  confirmBtn.innerText = 'Update'
-
-                  tableEditDialog
-                    .querySelectorAll('.columnNameField')
-                    .forEach((it) => {
-                      columnListArea.removeChild(it.parentNode)
-                    })
-
-                  tables[i].columnNames.forEach((name) => {
-                    const columnRowElem = createColumnRowElem(name)
-                    columnListArea.appendChild(columnRowElem)
-                  })
-
-                  tableEditDialog.querySelector(
-                    '#tableNameField'
-                  ).readOnly = true
-
-                  tableEditDialog
-                    .querySelectorAll('.columnNameField')
-                    .forEach((it) => (it.readOnly = true))
-
-                  tableEditDialog.showModal()
-                },
-              },
-              {
-                label: 'Rename columns',
+                label: 'Rename',
                 action: function (e, column) {
                   tableNameField.value = tables[i].tableName
                   confirmBtn.value = 'rename'
@@ -283,27 +284,56 @@
                   tableEditDialog.showModal()
                 },
               },
-              //   {
-              //     label: 'Move columns',
-              //     action: function (e, column) {
-              //       tableNameField.value = tables[i].tableName
-              //       confirmBtn.value = 'move'
-              //       confirmBtn.innerText = 'Update'
+              {
+                label: 'Add/Delete columns',
+                action: function (e, column) {
+                  tableNameField.value = tables[i].tableName
+                  confirmBtn.value = 'update'
+                  confirmBtn.innerText = 'Update'
 
-              //       tableEditDialog
-              //         .querySelectorAll('.columnNameField')
-              //         .forEach((it) => {
-              //           columnListArea.removeChild(it.parentNode)
-              //         })
+                  tableEditDialog
+                    .querySelectorAll('.columnNameField')
+                    .forEach((it) => {
+                      columnListArea.removeChild(it.parentNode)
+                    })
 
-              //       tables[i].columnNames.forEach((name) => {
-              //         const columnRowElem = createColumnRowElem(name, true)
-              //         columnListArea.appendChild(columnRowElem)
-              //       })
+                  tables[i].columnNames.forEach((name) => {
+                    const columnRowElem = createColumnRowElem(name)
+                    columnListArea.appendChild(columnRowElem)
+                  })
 
-              //       tableEditDialog.showModal()
-              //     },
-              //   },
+                  tableNameField.readOnly = true
+
+                  tableEditDialog
+                    .querySelectorAll('.columnNameField')
+                    .forEach((it) => (it.readOnly = true))
+
+                  tableEditDialog.showModal()
+                },
+              },
+              {
+                label: 'Move columns',
+                action: function (e, column) {
+                  tableNameField.value = tables[i].tableName
+                  confirmBtn.value = 'move'
+                  confirmBtn.innerText = 'Update'
+
+                  columnListArea.style.display = 'none'
+                  columnMovableArea.style.visibility = 'visible'
+                  addColumnBtn.style.visibility = 'hidden'
+                  tableNameField.readOnly = true
+
+                  tables[i].columnNames.forEach((name) => {
+                    const columnRowElem = document.createElement('div')
+                    columnRowElem.className = 'movableColumnName'
+                    columnRowElem.innerText = name
+                    columnRowElem.dataset.name = name
+                    columnMovableArea.appendChild(columnRowElem)
+                  })
+
+                  tableEditDialog.showModal()
+                },
+              },
             ],
           }
         }),

@@ -31,3 +31,16 @@
 .tabulator-menu-item {
   color: #555;
 }
+
+.modal-column-list {
+  max-height: 600px;
+  overflow-y: scroll;
+}
+
+.movableColumnName {
+  background-color: #eee;
+  margin: 2px 0;
+  padding: 4px;
+  color: #777;
+  font-weight: 700;
+}

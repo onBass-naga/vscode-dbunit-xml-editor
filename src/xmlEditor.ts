@@ -78,6 +78,9 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
         const tabulatorCssUri = webview.asWebviewUri(vscode.Uri.joinPath(
             this.context.extensionUri, 'media', 'third-party', 'tabulator', 'tabulator.min.css'));
 
+        const sortableScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'third-party', 'Sortable', 'Sortable.min.js'));
+
         const nonce = this.getNonce();
 
         return /* html */`
@@ -103,10 +106,11 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
                         </div>
                         <div>
                             <div>Column names:</div>
-                            <div id="columnListArea">
+                            <div id="columnListArea" class="modal-column-list">
                                 <div><input class="columnNameField" type="text" /><button class="deleteColumnBtn"> - </button></div>
                                 <div><input class="columnNameField" type="text" /><button class="deleteColumnBtn"> - </button></div>
                             </div>
+                            <div id="columnMovableArea" class="modal-column-list"></div>
                             <div><button id="addColumnBtn"> + </button></div>
                         </div>
                         <div>
@@ -116,6 +120,7 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
                     </form>
                 </dialog>
 
+                <script nonce="${nonce}" src="${sortableScriptUri}"></script>
                 <script nonce="${nonce}" src="${tabulatorScriptUri}"></script>
                 <script nonce="${nonce}" src="${converterScriptUri}"></script>
                 <script nonce="${nonce}" src="${mainScriptUri}"></script>
