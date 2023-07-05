@@ -218,6 +218,10 @@
   container.appendChild(hidden)
 
   function updateContent(tables, isFlatXml) {
+    if (tables == null) {
+      return
+    }
+
     while (tab.firstChild) {
       tab.removeChild(tab.firstChild)
     }
