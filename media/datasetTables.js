@@ -189,9 +189,34 @@
 
   const container = document.querySelector('#container')
 
-  const showTableModalBtn = document.createElement('button')
-  showTableModalBtn.innerText = 'Add table'
-  showTableModalBtn.addEventListener('click', () => {
+  const header = document.createElement('div')
+  header.className = 'header'
+  container.appendChild(header)
+
+  const formatLabel = document.createElement('label')
+  formatLabel.className = 'format-selectbox'
+  //   header.appendChild(formatLabel)
+  const selectElem = document.createElement('select')
+  formatLabel.appendChild(selectElem)
+  const optionElem1 = document.createElement('option')
+  optionElem1.innerText = 'Flat XML'
+  selectElem.appendChild(optionElem1)
+  const optionElem2 = document.createElement('option')
+  optionElem2.innerText = 'Standard XML'
+  selectElem.appendChild(optionElem2)
+
+  const tabContainer = document.createElement('div')
+  tabContainer.className = 'tab-container'
+  container.appendChild(tabContainer)
+
+  const tab = document.createElement('ul')
+  tab.className = 'tab-list'
+  tabContainer.appendChild(tab)
+
+  const addTableBtn = document.createElement('button')
+  addTableBtn.className = 'add-table-button'
+  addTableBtn.innerText = 'Add table'
+  addTableBtn.addEventListener('click', () => {
     confirmBtn.value = 'create'
     confirmBtn.innerText = 'Create'
     tableEditDialog.querySelectorAll('.columnNameField').forEach((it) => {
@@ -202,12 +227,7 @@
 
     tableEditDialog.showModal()
   })
-
-  container.appendChild(showTableModalBtn)
-
-  const tab = document.createElement('ul')
-  tab.className = 'tab-list'
-  container.appendChild(tab)
+  tabContainer.appendChild(addTableBtn)
 
   const tabContents = document.createElement('div')
   tabContents.className = 'tab-contents'
@@ -254,7 +274,7 @@
           return {
             title: name,
             field: name,
-            resizable: true,
+            maxWidth: 300,
             headerSort: false,
             editor: 'input',
             cellEdited: function (event, b) {
