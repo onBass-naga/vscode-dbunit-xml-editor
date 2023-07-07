@@ -1,6 +1,7 @@
 function parseXmlString(xml) {
-  var parser = new DOMParser()
-  var xmlDoc = parser.parseFromString(xml.trim(), 'text/xml')
+  const parser = new DOMParser()
+  const xmlReplaced = xml.trim().replaceAll('<null/>', '<value>[null]</value>')
+  const xmlDoc = parser.parseFromString(xmlReplaced, 'text/xml')
 
   // TODO: エラー処理をまじめに実装する
   if (xmlDoc.nodeName === 'parsererror') {
@@ -9,12 +10,12 @@ function parseXmlString(xml) {
 
   const result = convertXmlToObject(xmlDoc)
   if (result.length > 0) {
-    return { tables: result, isFlatXml: false }
+    return { tables: result, xmlFormat: 'standard' }
   }
 
   return {
     tables: convertFlatXmlToObject(xmlDoc),
-    isFlatXml: true,
+    xmlFormat: 'flat',
   }
 }
 
@@ -110,7 +111,7 @@ function convertXmlToObject(doc) {
   return tables
 }
 
-function serialize(xmlObj, isFlatXml) {
+function serialize(xmlObj, xmlFormat) {
   function serializeToFlatXml(tableObjects) {
     const xmlDoc = document.implementation.createDocument(null, 'dataset')
 
@@ -150,9 +151,15 @@ function serialize(xmlObj, isFlatXml) {
       for (let row of obj.data) {
         const rowElem = xmlDoc.createElement('row')
         for (let column of obj.columnNames) {
-          const valueElem = xmlDoc.createElement('value')
-          valueElem.textContent = row[column]
-          rowElem.appendChild(valueElem)
+          const value = row[column]
+          if (value === '[null]') {
+            const nullElem = xmlDoc.createElement('null')
+            rowElem.appendChild(nullElem)
+          } else {
+            const valueElem = xmlDoc.createElement('value')
+            valueElem.textContent = value
+            rowElem.appendChild(valueElem)
+          }
         }
 
         tableElem.appendChild(rowElem)
@@ -170,11 +177,14 @@ function serialize(xmlObj, isFlatXml) {
       .replaceAll('</row', '\n    </row')
       .replaceAll('<value', '\n      <value')
       .replaceAll('</dataset>', '\n</dataset>')
+      .replaceAll('><null/', '>\n      <null/')
 
     return "<?xml version='1.0' encoding='UTF-8'?>\n" + xmlString
   }
 
   // main --------------------------------------------------------------
 
-  return isFlatXml ? serializeToFlatXml(xmlObj) : serializeToXml(xmlObj)
+  return xmlFormat == 'flat'
+    ? serializeToFlatXml(xmlObj)
+    : serializeToXml(xmlObj)
 }
