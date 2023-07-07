@@ -58,7 +58,7 @@
     }
 
     const { tableName, editMode } = JSON.parse(result)
-    const { tables, isFlatXml } = vscode.getState()
+    const { tables, xmlFormat } = vscode.getState()
 
     const columnNameFields =
       tableEditDialog.querySelectorAll('.columnNameField')
@@ -80,7 +80,7 @@
 
       vscode.postMessage({
         type: 'apply',
-        text: serialize(tables, isFlatXml),
+        text: serialize(tables, xmlFormat),
       })
     } else if (editMode === 'update') {
       const tableModified = (() => {
@@ -115,7 +115,7 @@
 
       vscode.postMessage({
         type: 'apply',
-        text: serialize(tables, isFlatXml),
+        text: serialize(tables, xmlFormat),
       })
     } else if (editMode === 'rename') {
       const tableModified = (() => {
@@ -140,7 +140,7 @@
 
       vscode.postMessage({
         type: 'apply',
-        text: serialize(tables, isFlatXml),
+        text: serialize(tables, xmlFormat),
       })
     } else if (editMode === 'move') {
       const columnsReplaced = [
@@ -166,7 +166,7 @@
 
       vscode.postMessage({
         type: 'apply',
-        text: serialize(tables, isFlatXml),
+        text: serialize(tables, xmlFormat),
       })
     }
 
@@ -195,8 +195,14 @@
 
   const formatLabel = document.createElement('label')
   formatLabel.className = 'format-selectbox'
-  //   header.appendChild(formatLabel)
+  header.appendChild(formatLabel)
   const selectElem = document.createElement('select')
+  selectElem.id = 'xml-format'
+  selectElem.addEventListener('change', () => {
+    const index = selectElem.index
+    const value = selectElem.options[index].value
+    selectElem.dataset.selected = value
+  })
   formatLabel.appendChild(selectElem)
   const optionElem1 = document.createElement('option')
   optionElem1.innerText = 'Flat XML'
@@ -233,11 +239,7 @@
   tabContents.className = 'tab-contents'
   container.appendChild(tabContents)
 
-  const hidden = document.createElement('hidden')
-  hidden.value = false
-  container.appendChild(hidden)
-
-  function updateContent(tables, isFlatXml) {
+  function updateContent(tables, xmlFormat) {
     if (tables == null) {
       return
     }
@@ -281,7 +283,7 @@
               tablesState = structuredClone(tables)
               vscode.postMessage({
                 type: 'apply',
-                text: serialize(tables, hidden.value),
+                text: serialize(tables, selectElem.dataset.selected),
               })
             },
             headerContextMenu: [
@@ -380,7 +382,7 @@
               tables[i].data.splice(index, 0, rowCreated)
               vscode.postMessage({
                 type: 'apply',
-                text: serialize(tables, hidden.value),
+                text: serialize(tables, selectElem.dataset.selected),
               })
             },
           },
@@ -399,7 +401,7 @@
               tables[i].data.splice(index + 1, 0, rowCreated)
               vscode.postMessage({
                 type: 'apply',
-                text: serialize(tables, hidden.value),
+                text: serialize(tables, selectElem.dataset.selected),
               })
             },
           },
@@ -415,7 +417,7 @@
               tables[i].data.splice(index, 0, clone)
               vscode.postMessage({
                 type: 'apply',
-                text: serialize(tables, hidden.value),
+                text: serialize(tables, selectElem.dataset.selected),
               })
             },
           },
@@ -432,7 +434,7 @@
               tables[i].data.splice(index, 1)
               vscode.postMessage({
                 type: 'apply',
-                text: serialize(tables, hidden.value),
+                text: serialize(tables, selectElem.dataset.selected),
               })
             },
           },
@@ -457,7 +459,7 @@
       activeTabIndex = index
     }
 
-    hidden.value = isFlatXml
+    selectElem.dataset.selected = xmlFormat
   }
 
   function areSame(tables1, tables2) {
@@ -512,7 +514,7 @@
         }
 
         vscode.setState(xmlObj)
-        updateContent(structuredClone(xmlObj.tables), xmlObj.isFlatXml)
+        updateContent(structuredClone(xmlObj.tables), xmlObj.xmlFormat)
 
         return
     }
@@ -520,6 +522,6 @@
 
   const state = vscode.getState()
   if (state) {
-    updateContent(structuredClone(state.tables), state.isFlatXml)
+    updateContent(structuredClone(state.tables), state.xmlFormat)
   }
 })()
