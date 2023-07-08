@@ -110,43 +110,32 @@ function convertFlatXmlToObject(doc) {
 function convertXmlToObject(doc) {
   function getTable(node) {
     const tableName = node.getAttribute('name')
-    const columnNames = (() => {
-      const array = []
-      const columns = node.getElementsByTagName('column')
-      for (let elem of columns) {
-        array.push(elem.textContent)
-      }
-      return array
-    })()
+    const columnNames = [...node.getElementsByTagName('column')].map(
+      (it) => it.textContent
+    )
     const values = (() => {
-      const rows = node.getElementsByTagName('row')
-      const array = []
-      for (let elem of rows) {
-        array.push(getValues(elem))
+      const rows = [...node.getElementsByTagName('row')]
+      if (rows.length == 0) {
+        return [Array(columnNames.length).fill('')]
       }
-      return array
+
+      return rows.map((row) => getValues(row))
     })()
-    const data = (() => {
-      const array = []
-      for (let row of values) {
-        const obj = {}
-        for (let i = 0; i < columnNames.length; i++) {
-          obj[columnNames[i]] = row[i]
-        }
-        array.push(obj)
-      }
-      return array
-    })()
+
+    const data = values.map((row) => {
+      return columnNames.reduce((acc, column, i) => {
+        acc[column] = row[i]
+        return acc
+      }, {})
+    })
+
     return { tableName, columnNames, data }
   }
 
   function getValues(rowElem) {
-    const values = rowElem.getElementsByTagName('value')
-    const array = []
-    for (let elem of values) {
-      array.push(elem.textContent)
-    }
-    return array
+    return [...rowElem.getElementsByTagName('value')].map(
+      (it) => it.textContent
+    )
   }
 
   // main --------------------------------------------------------------
