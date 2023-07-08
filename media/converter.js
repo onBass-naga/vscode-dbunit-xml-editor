@@ -20,32 +20,74 @@ function parseXmlString(xml) {
 }
 
 function convertFlatXmlToObject(doc) {
-  function parseNode(node) {
+  function parseNode(node, tableColumnsMap) {
     const tableName = node.nodeName
-    const attributes = node.attributes
-    const columnNames = (() => {
-      const array = []
-      for (let attr of attributes) {
-        array.push(attr.name)
+    const columnValues = [...node.attributes].reduce((acc, attr) => {
+      acc[attr.name] = attr.value
+      return acc
+    }, {})
+    const columnNames = tableColumnsMap[tableName]
+    const data = columnNames.reduce((acc, column) => {
+      if (columnValues[column] == null) {
+        acc[column] = '[null]'
+      } else {
+        acc[column] = columnValues[column]
       }
-      return array
-    })()
-    const data = (() => {
-      const obj = {}
-      for (let attr of attributes) {
-        obj[attr.name] = attr.value
-      }
-      return obj
-    })()
+      return acc
+    }, {})
 
     return { tableName, columnNames, data }
   }
 
+  function merge(a, b) {
+    const replaceable = {}
+    let work = []
+    for (let column of b) {
+      if (a.includes(column)) {
+        if (work.length > 0) {
+          work.push(column)
+          replaceable[column] = work
+          work = []
+        }
+        continue
+      }
+      work.push(column)
+    }
+    const tail = work
+
+    const merged = a.reduce((acc, it) => {
+      if (replaceable[it] != null) {
+        acc.push(...replaceable[it])
+      } else {
+        acc.push(it)
+      }
+      return acc
+    }, [])
+    merged.push(...tail)
+    return merged
+  }
+
+  function createTableColumnsMap(elements) {
+    return [...elements].reduce((acc, elem) => {
+      const tableName = elem.nodeName
+      const attributes = elem.attributes
+      const columnNames = [...attributes].map((it) => it.name)
+      if (acc[tableName] == null) {
+        acc[tableName] = columnNames
+      } else {
+        merge(acc[tableName], columnNames)
+      }
+      return acc
+    }, {})
+  }
+
   // main ------------------------------------------------------------------
   const elements = doc.getElementsByTagName('dataset')[0].children
+  const tableColumnsMap = createTableColumnsMap(elements)
+
   const tables = []
   for (let elem of elements) {
-    const result = parseNode(elem)
+    const result = parseNode(elem, tableColumnsMap)
     const foundOne = tables.find((it) => it.tableName === result.tableName)
     if (foundOne) {
       foundOne.data.push(result.data)
@@ -57,6 +99,7 @@ function convertFlatXmlToObject(doc) {
       })
     }
   }
+
   return tables
 }
 
