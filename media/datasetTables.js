@@ -199,15 +199,23 @@
   const selectElem = document.createElement('select')
   selectElem.id = 'xml-format'
   selectElem.addEventListener('change', () => {
-    const index = selectElem.index
+    const state = vscode.getState()
+    const index = selectElem.selectedIndex
     const value = selectElem.options[index].value
     selectElem.dataset.selected = value
+
+    vscode.postMessage({
+      type: 'apply',
+      text: serialize(state.tables, value),
+    })
   })
   formatLabel.appendChild(selectElem)
   const optionElem1 = document.createElement('option')
   optionElem1.innerText = 'Flat XML'
+  optionElem1.value = 'flat'
   selectElem.appendChild(optionElem1)
   const optionElem2 = document.createElement('option')
+  optionElem2.value = 'standard'
   optionElem2.innerText = 'Standard XML'
   selectElem.appendChild(optionElem2)
 
@@ -243,6 +251,11 @@
     if (tables == null) {
       return
     }
+
+    const indexOfXmlOption = [...selectElem.options].findIndex((it) => {
+      return it.value === xmlFormat
+    })
+    selectElem.selectedIndex = indexOfXmlOption
 
     while (tab.firstChild) {
       tab.removeChild(tab.firstChild)
