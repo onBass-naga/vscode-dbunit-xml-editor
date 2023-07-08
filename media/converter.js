@@ -67,15 +67,19 @@ function convertFlatXmlToObject(doc) {
     return merged
   }
 
+  function addInitDataIfEmpty(columnNames) {
+    return columnNames.length > 0 ? columnNames : ['column_name']
+  }
+
   function createTableColumnsMap(elements) {
     return [...elements].reduce((acc, elem) => {
       const tableName = elem.nodeName
       const attributes = elem.attributes
       const columnNames = [...attributes].map((it) => it.name)
       if (acc[tableName] == null) {
-        acc[tableName] = columnNames
+        acc[tableName] = addInitDataIfEmpty(columnNames)
       } else {
-        merge(acc[tableName], columnNames)
+        acc[tableName] = merge(acc[tableName], columnNames)
       }
       return acc
     }, {})
