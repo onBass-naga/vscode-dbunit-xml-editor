@@ -98,24 +98,36 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
 			</head>
 			<body>
                 <div id="container"></div>
-                <dialog id="tableEditDialog">
-                    <form>
-                        <div>
-                            <div>Table name:</div>
-                            <div><input id="tableNameField" type="text" /></div>
+                <dialog id="tableEditDialog" class="modal">
+                    <form class="table-edit-form">
+                        <div class="modal-header">
+                          <p>Header</P>
+                          <button class="button button-square" value="" formmethod="dialog">&times</button>
                         </div>
-                        <div>
-                            <div>Column names:</div>
-                            <div id="columnListArea" class="modal-column-list">
-                                <div><input class="columnNameField" type="text" /><button class="deleteColumnBtn"> - </button></div>
-                                <div><input class="columnNameField" type="text" /><button class="deleteColumnBtn"> - </button></div>
+                        <div class="modal-content">
+                          <label>
+                            <span class="textbox-label">Table Name</span>
+                            <input id="tableNameField" type="text" class="textbox"/>
+                          </label>
+                        </div>
+                        <div class="modal-content">
+                            <div class="textbox-label">Column Names</div>
+                            <div id="columnListArea" class="modal-column-list"></div>
+                            <div id="columnMovableArea" class="modal-column-list hide"></div>
+                            <div class="add-button-row">
+                              <button id="addColumnBtn" class="button button-square">&plus;</button>
                             </div>
-                            <div id="columnMovableArea" class="modal-column-list"></div>
-                            <div><button id="addColumnBtn"> + </button></div>
+                            <div id="alertBox" class="alert-box hide">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                                    <path fill="#f06060"
+                                        d="M12,1.5c.7,0,1.3,.4,1.6,.9l10.1,17.3c.3,.6,.3,1.3,0,1.9s-1,.9-1.6,.9H1.9c-.7,0-1.3-.4-1.6-.9s-.3-1.3,0-1.9L10.4,2.4c.3-.6,1-.9,1.6-.9Zm0,6c-.6,0-1.1,.5-1.1,1.1v5.3c0,.6,.5,1.1,1.1,1.1s1.1-.5,1.1-1.1v-5.3c0-.6-.5-1.1-1.1-1.1Zm1.5,10.5c0-.8-.7-1.5-1.5-1.5s-1.5,.7-1.5,1.5,.7,1.5,1.5,1.5,1.5-.7,1.5-1.5Z"/>
+                                </svg>
+                                <p>Names are required.</p>
+                            </div>
                         </div>
-                        <div>
-                            <button value="" formmethod="dialog">Cancel</button>
-                            <button id="confirmBtn" value="create">Create</button>
+                        <div class="modal-footer">
+                            <button class="button button-clear" value="" formmethod="dialog">Cancel</button>
+                            <button id="confirmBtn" class="button button-primary" value="create">Create</button>
                         </div>
                     </form>
                 </dialog>

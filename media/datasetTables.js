@@ -7,6 +7,8 @@
   const tableNameField = tableEditDialog.querySelector('#tableNameField')
   const columnListArea = tableEditDialog.querySelector('#columnListArea')
   const columnMovableArea = tableEditDialog.querySelector('#columnMovableArea')
+  const alertBox = tableEditDialog.querySelector('#alertBox')
+  const addBtnRow = tableEditDialog.querySelector('.add-button-row')
   const addColumnBtn = tableEditDialog.querySelector('#addColumnBtn')
   addColumnBtn.addEventListener('click', (event) => {
     event.preventDefault()
@@ -16,14 +18,15 @@
   function createColumnRowElem(columnName, hideDeleteBtn) {
     const columnRowElem = document.createElement('div')
     const inputElem = document.createElement('input')
-    inputElem.className = 'columnNameField'
+    inputElem.className = 'columnNameField textbox'
     inputElem.setAttribute('type', 'text')
     inputElem.value = columnName
     columnRowElem.appendChild(inputElem)
     if (!hideDeleteBtn) {
+      inputElem.className = 'columnNameField textbox narrow'
       const delBtnElem = document.createElement('button')
-      delBtnElem.className = 'deleteColumnBtn'
-      delBtnElem.innerText = ' - '
+      delBtnElem.className = 'deleteColumnBtn button button-square'
+      delBtnElem.innerHTML = '&minus;'
       delBtnElem.addEventListener('click', (event) => {
         event.preventDefault()
         columnListArea.removeChild(event.target.parentNode)
@@ -42,6 +45,22 @@
   const confirmBtn = tableEditDialog.querySelector('#confirmBtn')
   confirmBtn.addEventListener('click', (event) => {
     event.preventDefault()
+
+    const tableName = tableNameField.value.trim()
+    const columnNames = [
+      ...tableEditDialog.querySelectorAll('#columnListArea input'),
+    ]
+      .map((it) => it.value.trim())
+      .filter((it) => it !== '')
+    const editMode = confirmBtn.value
+
+    if (
+      ['create', 'update'].includes(editMode) &&
+      (tableName === '' || columnNames.length === 0)
+    ) {
+      alertBox.className = 'alert-box'
+      return
+    }
     tableEditDialog.close(
       JSON.stringify({
         tableName: tableNameField.value.trim(),
@@ -178,9 +197,19 @@
       .querySelectorAll('input')
       .forEach((elemm) => (elemm.value = ''))
 
-    columnListArea.style.display = 'block'
-    addColumnBtn.style.visibility = 'visible'
+    removeAllChildNodes(columnListArea)
+    removeAllChildNodes(columnMovableArea)
+    columnListArea.className = 'modal-column-list'
+    columnMovableArea.className = 'modal-column-list hide'
+    addBtnRow.className = 'add-button-row'
+    alertBox.className = 'alert-box hide'
     tableEditDialog.querySelector('#tableNameField').readOnly = false
+  }
+
+  function removeAllChildNodes(parentNode) {
+    while (parentNode.firstChild) {
+      parentNode.removeChild(parentNode.firstChild)
+    }
   }
 
   Sortable.create(columnMovableArea, {
@@ -233,9 +262,6 @@
   addTableBtn.addEventListener('click', () => {
     confirmBtn.value = 'create'
     confirmBtn.innerText = 'Create'
-    tableEditDialog.querySelectorAll('.columnNameField').forEach((it) => {
-      columnListArea.removeChild(it.parentNode)
-    })
     const columnRowElem = createColumnRowElem('')
     columnListArea.appendChild(columnRowElem)
 
@@ -307,19 +333,12 @@
                   confirmBtn.value = 'rename'
                   confirmBtn.innerText = 'Update'
 
-                  tableEditDialog
-                    .querySelectorAll('.columnNameField')
-                    .forEach((it) => {
-                      columnListArea.removeChild(it.parentNode)
-                    })
-
                   tables[i].columnNames.forEach((name) => {
                     const columnRowElem = createColumnRowElem(name, true)
                     columnListArea.appendChild(columnRowElem)
                   })
 
-                  addColumnBtn.style.visibility = 'hidden'
-
+                  addBtnRow.classList.toggle('hide')
                   tableEditDialog.showModal()
                 },
               },
@@ -329,12 +348,6 @@
                   tableNameField.value = tables[i].tableName
                   confirmBtn.value = 'update'
                   confirmBtn.innerText = 'Update'
-
-                  tableEditDialog
-                    .querySelectorAll('.columnNameField')
-                    .forEach((it) => {
-                      columnListArea.removeChild(it.parentNode)
-                    })
 
                   tables[i].columnNames.forEach((name) => {
                     const columnRowElem = createColumnRowElem(name)
@@ -357,9 +370,9 @@
                   confirmBtn.value = 'move'
                   confirmBtn.innerText = 'Update'
 
-                  columnListArea.style.display = 'none'
-                  columnMovableArea.style.visibility = 'visible'
-                  addColumnBtn.style.visibility = 'hidden'
+                  columnListArea.classList.toggle('hide')
+                  columnMovableArea.classList.toggle('hide')
+                  addBtnRow.classList.toggle('hide')
                   tableNameField.readOnly = true
 
                   tables[i].columnNames.forEach((name) => {
