@@ -116,7 +116,7 @@ function convertXmlToObject(doc) {
     const values = (() => {
       const rows = [...node.getElementsByTagName('row')]
       if (rows.length == 0) {
-        return [Array(columnNames.length).fill('')]
+        return [Array(columnNames.length).fill('[null]')]
       }
 
       return rows.map((row) => getValues(row))
@@ -184,7 +184,10 @@ function serialize(xmlObj, xmlFormat) {
         tableElem.appendChild(columnElem)
       }
 
-      for (let row of obj.data) {
+      const rows = obj.data.filter((row) => {
+        return !Object.entries(row).every(([key, value]) => value === '[null]')
+      })
+      for (let row of rows) {
         const rowElem = xmlDoc.createElement('row')
         for (let column of obj.columnNames) {
           const value = row[column]
