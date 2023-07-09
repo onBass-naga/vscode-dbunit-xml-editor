@@ -101,7 +101,7 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
                 <dialog id="tableEditDialog" class="modal">
                     <form class="table-edit-form">
                         <div class="modal-header">
-                          <p>Header</P>
+                          <p id="modalTitle">Header</P>
                           <button class="button button-square" value="" formmethod="dialog">&times</button>
                         </div>
                         <div class="modal-content">

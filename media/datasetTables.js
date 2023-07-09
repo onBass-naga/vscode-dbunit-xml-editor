@@ -4,6 +4,7 @@
 
   const vscode = acquireVsCodeApi()
   const tableEditDialog = document.getElementById('tableEditDialog')
+  const modalTitle = tableEditDialog.querySelector('#modalTitle')
   const tableNameField = tableEditDialog.querySelector('#tableNameField')
   const columnListArea = tableEditDialog.querySelector('#columnListArea')
   const columnMovableArea = tableEditDialog.querySelector('#columnMovableArea')
@@ -152,7 +153,7 @@
           }, {})
         })
 
-        return Object.assign({}, original, { columnNames, data })
+        return Object.assign({}, original, { tableName, columnNames, data })
       })()
 
       tables.splice(activeTabIndex, 1, tableModified)
@@ -264,7 +265,7 @@
     confirmBtn.innerText = 'Create'
     const columnRowElem = createColumnRowElem('')
     columnListArea.appendChild(columnRowElem)
-
+    modalTitle.innerText = 'Add Table'
     tableEditDialog.showModal()
   })
   tabContainer.appendChild(addTableBtn)
@@ -338,6 +339,7 @@
                     columnListArea.appendChild(columnRowElem)
                   })
 
+                  modalTitle.innerText = 'Renaame'
                   addBtnRow.classList.toggle('hide')
                   tableEditDialog.showModal()
                 },
@@ -360,6 +362,7 @@
                     .querySelectorAll('.columnNameField')
                     .forEach((it) => (it.readOnly = true))
 
+                  modalTitle.innerText = 'Add/Delete Columns'
                   tableEditDialog.showModal()
                 },
               },
@@ -383,6 +386,7 @@
                     columnMovableArea.appendChild(columnRowElem)
                   })
 
+                  modalTitle.innerText = 'Move Columns'
                   tableEditDialog.showModal()
                 },
               },
