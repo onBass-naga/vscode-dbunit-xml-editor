@@ -1,13 +1,30 @@
 import * as vscode from 'vscode';
+import { ViewColumn, Uri } from 'vscode';
 
 export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
 
-    private static readonly viewType = 'editor';
-
     public static register(context: vscode.ExtensionContext): vscode.Disposable {
         const provider = new XmlEditorProvider(context);
-        const providerRegistration = vscode.window.registerCustomEditorProvider(XmlEditorProvider.viewType, provider);
-        return providerRegistration;
+        const providerRegistration = vscode.window.registerCustomEditorProvider('dbunit.xml.editor', provider);
+        context.subscriptions.push(providerRegistration);
+
+        const command = vscode.commands.registerCommand("extension.dbunitXmlEditor", (uri?: Uri) => {
+            uri ??= vscode.window.activeTextEditor?.document.uri;
+            vscode.commands.executeCommand(
+                'vscode.openWith',
+                uri,
+                'dbunit.xml.editor',
+                ViewColumn.Beside,
+            );
+        });
+
+        context.subscriptions.push(command);
+
+        return new vscode.Disposable(() => {
+            // provider.dispose();
+            providerRegistration.dispose();
+            command.dispose();
+        });
     }
 
     constructor(
@@ -162,3 +179,4 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
         return text;
     }
 }
+

@@ -12,16 +12,30 @@
 	"contributes": {
 		"customEditors": [
 			{
-				"viewType": "editor",
+				"viewType": "dbunit.xml.editor",
 				"displayName": "DBUnit XML Editor",
 				"selector": [
 					{
 						"filenamePattern": "*.xml"
 					}
-				],
-				"priority": "option"
+				]
 			}
-		]
+		],
+		"commands": [
+			{
+				"command": "extension.dbunitXmlEditor",
+				"title": "DBUnit XML Editor"
+			}
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"command": "extension.dbunitXmlEditor",
+					"group": "navigation",
+					"when": "editorLangId == xml"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
