@@ -2,6 +2,7 @@
 .header {
   text-align: right;
   padding-bottom: 8px;
+  padding-top: 24px;
 }
 
 .format-selectbox {
@@ -161,6 +162,15 @@
   letter-spacing: 0.05em;
 }
 
+.button-danger {
+  margin-left: 8px;
+  background-color: #dc3545;
+  color: #fff;
+  opacity: 1;
+  border-color: #fb8181;
+  letter-spacing: 0.05em;
+}
+
 .button-clear {
 }
 
@@ -194,6 +204,12 @@
   display: block;
   margin-bottom: 5px;
   font-size: .9em;
+}
+
+.modal-content h5 {
+  font-size: 1.5em;
+  font-weight: 400;
+  margin: 0;
 }
 
 .textbox {

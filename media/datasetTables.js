@@ -213,6 +213,35 @@
     }
   }
 
+  const tableDeleteDialog = document.getElementById('tableDeleteDialog')
+  const tableNameToDelete =
+    tableDeleteDialog.querySelector('#tableNameToDelete')
+  const deleteTableBtn = tableDeleteDialog.querySelector('#deleteTableBtn')
+  deleteTableBtn.addEventListener('click', (event) => {
+    event.preventDefault()
+    tableDeleteDialog.close(
+      JSON.stringify({
+        editMode: deleteTableBtn.value,
+      })
+    )
+  })
+
+  tableDeleteDialog.addEventListener('close', (e) => {
+    const result = tableDeleteDialog.returnValue
+    if (result == '') {
+      return
+    }
+
+    const { tables, xmlFormat } = vscode.getState()
+
+    tables.splice(activeTabIndex, 1)
+
+    vscode.postMessage({
+      type: 'apply',
+      text: serialize(tables, xmlFormat),
+    })
+  })
+
   Sortable.create(columnMovableArea, {
     animation: 150,
   })
@@ -388,6 +417,13 @@
 
                   modalTitle.innerText = 'Move Columns'
                   tableEditDialog.showModal()
+                },
+              },
+              {
+                label: 'Delete table',
+                action: function (e, column) {
+                  tableNameToDelete.innerHTML = tables[i].tableName
+                  tableDeleteDialog.showModal()
                 },
               },
             ],

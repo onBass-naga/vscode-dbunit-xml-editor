@@ -132,6 +132,19 @@ export class XmlEditorProvider implements vscode.CustomTextEditorProvider {
                     </form>
                 </dialog>
 
+                <dialog id="tableDeleteDialog" class="modal">
+                    <form class="table-edit-form">
+                        <div class="modal-content">
+                            <h5 id="tableNameToDelete">TableName</h5>
+                            <p>Do you really want to Delete?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="button button-clear" value="" formmethod="dialog">Cancel</button>
+                            <button id="deleteTableBtn" class="button button-danger" value="delete">Delete anyway</button>
+                        </div>
+                    </form>
+                </dialog>
+
                 <script nonce="${nonce}" src="${sortableScriptUri}"></script>
                 <script nonce="${nonce}" src="${tabulatorScriptUri}"></script>
                 <script nonce="${nonce}" src="${converterScriptUri}"></script>
