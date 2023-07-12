@@ -1,0 +1,7 @@
+/node_modules
+/out
+/sample_files
+/.idea
+
+memo.txt
+*.vsix
