@@ -1,7 +1,7 @@
 {
 	"name": "vscode-dbunit-xml-editor",
 	"description": "XML Editor For DBUnit Dataset XML",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"publisher": "onBass-naga",
 	"repository": "https://github.com/onBass-naga/vscode-dbunit-xml-editor",
 	"engines": {
