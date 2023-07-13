@@ -18,7 +18,8 @@
 					{
 						"filenamePattern": "*.xml"
 					}
-				]
+				],
+				"priority": "option"
 			}
 		],
 		"commands": [
